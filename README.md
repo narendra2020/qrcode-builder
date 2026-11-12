@@ -204,4 +204,4 @@ Split Bill has a pytest suite (`backend/tests`, run `pytest` from `backend/`; it
 - Storefronts are static: a catalogue save re-renders the whole site, which is fine up to `MAX_CATALOGUE_ITEMS` (1000). Very large catalogues would need pagination or a dynamic renderer.
 - Only Indian (+91) login numbers are supported, because portfolio-builder's signup is India-only. Business WhatsApp numbers can be international.
 - Custom domains are modelled (`custom_domain`) but not routed or certified yet.
-- Activity counts measure taps that opened WhatsApp, not delivered messages.
+- Activity counts measure taps that opened WhatsApp, not delivered messages. 
