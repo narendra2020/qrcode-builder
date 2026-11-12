@@ -1,0 +1,40 @@
+{# Menu Classic — printed-menu rows, prices right-aligned, diet marks. #}
+{% extends "_base.html.j2" %}
+{% from "_macros.html.j2" import img, labels, price, variants, actions, detail, details_button, brand_header, contact_strip with context %}
+
+{% block hero %}
+<div class="mc-hero"{% if banner %} style="background-image: linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.55)), url('{{ banner.src }}')"{% endif %}>
+  {{ brand_header("mc-brand") }}
+  {% if store.description %}<p class="mc-intro">{{ store.description }}</p>{% endif %}
+  {{ contact_strip() }}
+</div>
+{% endblock %}
+
+{% block catalogue %}
+{% for c in categories %}
+<section class="mc-section" id="cat-{{ loop.index }}" aria-labelledby="cat-{{ loop.index }}-h">
+  <h2 id="cat-{{ loop.index }}-h" class="mc-section-title"><span>{{ c.name }}</span></h2>
+  <ul class="mc-list">
+    {% for item in c["items"] %}
+    <li class="mc-row item{% if not item.available %} is-out{% endif %}">
+      {% if item.image %}<div class="mc-thumb">{{ img(item.image, item.name, "72px") }}</div>{% endif %}
+      <div class="mc-main">
+        <div class="mc-line">
+          <h3 class="item-name">{{ item.name }}</h3>
+          <span class="mc-dots" aria-hidden="true"></span>
+          {{ price(item) }}
+        </div>
+        {{ labels(item) }}
+        {% if item.description %}<p class="item-desc">{{ item.description }}</p>{% endif %}
+        {{ variants(item) }}
+        {% if not item.available %}<p class="out-note">Currently unavailable</p>{% endif %}
+        {{ actions(item) }}
+      </div>
+      {{ details_button(item) }}
+    </li>
+    {{ detail(item) }}
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,42 @@
+{# Auto Showroom — bold header band, wide landscape cards with spec chips. #}
+{% extends "_base.html.j2" %}
+{% from "_macros.html.j2" import img, media, labels, price, actions, detail, details_button, brand_header, contact_strip with context %}
+
+{% block hero %}
+<div class="as-hero">
+  {% if banner %}<div class="as-banner">{{ img(banner, "", "100vw", "", true) }}</div>{% endif %}
+  <div class="as-band">
+    {{ brand_header("as-brand") }}
+    {{ contact_strip() }}
+  </div>
+</div>
+{% endblock %}
+
+{% block catalogue %}
+{% for c in categories %}
+<section class="as-section" id="cat-{{ loop.index }}" aria-labelledby="cat-{{ loop.index }}-h">
+  <h2 id="cat-{{ loop.index }}-h" class="as-title">{{ c.name }}</h2>
+  <ul class="as-list">
+    {% for item in c["items"] %}
+    <li class="as-card item{% if not item.available %} is-out{% endif %}">
+      {{ media(item, "(max-width: 700px) 100vw, 420px") }}
+      <div class="as-body">
+        <div class="as-head">
+          <h3 class="item-name">{{ item.name }}</h3>
+          {{ price(item) }}
+        </div>
+        {% if item.variants %}
+        <ul class="chips">{% for v in item.variants %}<li class="chip">{{ v.name }}{% if v.label %} · {{ v.label }}{% endif %}</li>{% endfor %}</ul>
+        {% endif %}
+        {{ labels(item) }}
+        {% if item.description %}<p class="item-desc clamp-3">{{ item.description }}</p>{% endif %}
+        {{ actions(item) }}
+      </div>
+      {{ details_button(item) }}
+    </li>
+    {{ detail(item) }}
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+{% endblock %}

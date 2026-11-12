@@ -1,0 +1,41 @@
+{# Boutique Elegant — serif headings, tall portrait cards, gold rules. #}
+{% extends "_base.html.j2" %}
+{% from "_macros.html.j2" import img, media, labels, price, actions, detail, details_button, contact_strip with context %}
+
+{% block hero %}
+<header class="be-hero">
+  {% if banner %}<div class="be-banner">{{ img(banner, "", "100vw", "", true) }}</div>{% endif %}
+  <div class="be-mast">
+    {% if logo %}<div class="be-logo">{{ img(logo, store.name ~ " logo", "120px", "", true) }}</div>{% endif %}
+    <h1>{{ store.name }}</h1>
+    <span class="be-rule" aria-hidden="true"></span>
+    {% if store.tagline %}<p class="tagline">{{ store.tagline }}</p>{% endif %}
+    {% if store.description %}<p class="be-intro">{{ store.description }}</p>{% endif %}
+    {{ contact_strip() }}
+  </div>
+</header>
+{% endblock %}
+
+{% block catalogue %}
+{% for c in categories %}
+<section class="be-section" id="cat-{{ loop.index }}" aria-labelledby="cat-{{ loop.index }}-h">
+  <h2 id="cat-{{ loop.index }}-h" class="be-title">{{ c.name }}</h2>
+  <ul class="be-grid">
+    {% for item in c["items"] %}
+    <li class="be-card item{% if not item.available %} is-out{% endif %}">
+      {{ media(item, "(max-width: 600px) 50vw, 320px") }}
+      <div class="be-body">
+        <h3 class="item-name">{{ item.name }}</h3>
+        {{ price(item) }}
+        {{ labels(item) }}
+        {% if item.description %}<p class="item-desc clamp-3">{{ item.description }}</p>{% endif %}
+        {{ actions(item) }}
+      </div>
+      {{ details_button(item) }}
+    </li>
+    {{ detail(item) }}
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+{% endblock %}

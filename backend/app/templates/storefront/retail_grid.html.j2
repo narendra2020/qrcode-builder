@@ -1,0 +1,39 @@
+{# Retail Grid — search + filter chips over a dense product grid. #}
+{% extends "_base.html.j2" %}
+{% from "_macros.html.j2" import img, media, labels, price, actions, detail, details_button, brand_header, contact_strip with context %}
+
+{% block hero %}
+<div class="rg-hero">
+  {{ brand_header("rg-brand") }}
+  {{ contact_strip() }}
+  {% if banner %}<div class="rg-banner">{{ img(banner, "", "100vw", "", true) }}</div>{% endif %}
+  <div class="rg-tools" role="search">
+    <label class="sr-only" for="rg-search">Search {{ catalogue_noun | lower }}</label>
+    <input id="rg-search" type="search" placeholder="Search {{ item_count }} {{ item_noun }}s…" autocomplete="off" data-search>
+  </div>
+</div>
+{% endblock %}
+
+{% block catalogue %}
+<p class="rg-noresults" data-noresults hidden>No matching {{ item_noun }}s. Try another word.</p>
+{% for c in categories %}
+<section class="rg-section" id="cat-{{ loop.index }}" aria-labelledby="cat-{{ loop.index }}-h" data-section>
+  <h2 id="cat-{{ loop.index }}-h" class="rg-title">{{ c.name }}</h2>
+  <ul class="rg-grid">
+    {% for item in c["items"] %}
+    <li class="rg-card item{% if not item.available %} is-out{% endif %}" data-name="{{ (item.name ~ ' ' ~ (item.description or '')) | lower }}">
+      {{ media(item, "(max-width: 600px) 50vw, 240px") }}
+      <div class="rg-body">
+        <h3 class="item-name clamp-2">{{ item.name }}</h3>
+        {{ price(item) }}
+        {{ labels(item) }}
+        {{ actions(item) }}
+      </div>
+      {{ details_button(item) }}
+    </li>
+    {{ detail(item) }}
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+{% endblock %}

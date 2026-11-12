@@ -1,0 +1,148 @@
+{#
+  Shared storefront shell. Each template extends this and fills
+  `hero` and `catalogue`; the cart drawer, item dialog, WhatsApp logic
+  (static/store.js) and footer are common so behaviour is identical
+  across designs. All content is autoescaped; store data for the script
+  is embedded with |tojson (which escapes <, >, &).
+#}
+{% from "_macros.html.j2" import img with context %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{ store.name }}{% if store.city %} · {{ store.city }}{% endif %} — {{ catalogue_noun }}</title>
+  <meta name="description" content="{{ meta_description }}">
+  {% if mode == "published" %}
+  <link rel="canonical" href="{{ store.url }}/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ store.name }}">
+  <meta property="og:description" content="{{ meta_description }}">
+  <meta property="og:url" content="{{ store.url }}/">
+  {% if logo %}<meta property="og:image" content="{{ store.url }}/{{ logo.src }}">{% endif %}
+  {% else %}
+  <meta name="robots" content="noindex">
+  {% endif %}
+  <meta name="theme-color" content="{{ theme.primary }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{ theme.font_spec }}&display=swap">
+  {% if inline_css %}<style>{{ inline_css | safe }}</style>{% else %}<link rel="stylesheet" href="assets/store.css?v={{ asset_v }}">{% endif %}
+  <style>
+    :root {
+      --brand: {{ theme.primary }}; --on-brand: {{ theme.on_primary }};
+      --accent: {{ theme.secondary }}; --on-accent: {{ theme.on_secondary }};
+      --bg: {{ theme.background }}; --ink: {{ theme.text }};
+      --font: {{ theme.font_stack | safe }};
+    }
+  </style>
+  <script type="application/ld+json">{{ {
+    "@context": "https://schema.org", "@type": ("Restaurant" if category.key == "restaurant" else "Store"),
+    "name": store.name, "url": store.url, "telephone": store.phone, "address": store.address,
+    "openingHours": store.opening_hours
+  } | tojson }}</script>
+</head>
+<body class="tpl-{{ template_key }}">
+  <a class="skip-link" href="#catalogue">Skip to {{ catalogue_noun | lower }}</a>
+  {% if mode == "preview" %}<div class="preview-ribbon" role="note">Preview — this is how customers will see your store</div>{% endif %}
+
+  {% block hero %}{% endblock %}
+
+  {% if categories|length > 1 %}
+  <nav class="cat-nav" aria-label="{{ catalogue_noun }} sections">
+    <div class="cat-nav-inner">
+      {% for c in categories %}<a href="#cat-{{ loop.index }}" class="cat-link" data-cat="cat-{{ loop.index }}">{{ c.name }}</a>{% endfor %}
+    </div>
+  </nav>
+  {% endif %}
+
+  <main id="catalogue" class="catalogue" tabindex="-1">
+    {% if categories and template_key != "retail-grid" %}
+    <div class="catalogue-search" role="search">
+      <label class="sr-only" for="catalogue-search-input">Search {{ catalogue_noun | lower }}</label>
+      <input id="catalogue-search-input" type="search" placeholder="Search {{ item_count }} {{ item_noun }}s…" autocomplete="off" data-search>
+    </div>
+    <p class="search-noresults" data-noresults hidden>No matching {{ item_noun }}s. Try another word.</p>
+    {% endif %}
+    {% if not categories %}
+      <div class="empty-state">
+        <p class="empty-icon" aria-hidden="true">{{ placeholder_icon }}</p>
+        <h2>Our {{ catalogue_noun | lower }} is being updated</h2>
+        <p>Please check back soon, or message us on WhatsApp.</p>
+        {% if store.whatsapp %}<a class="btn btn-wa" href="https://wa.me/{{ store.whatsapp }}" target="_blank" rel="noopener">Chat on WhatsApp</a>{% endif %}
+      </div>
+    {% else %}
+      {% block catalogue %}{% endblock %}
+    {% endif %}
+  </main>
+
+  {% if split_bill %}
+  <section class="split-promo" aria-labelledby="split-promo-title">
+    <div class="split-promo-text">
+      <h2 id="split-promo-title">Want to split the bill with friends?</h2>
+      <p>Divide the bill equally — everyone gets their own share and how to pay on WhatsApp.</p>
+    </div>
+    <button type="button" class="btn" data-split-open aria-haspopup="dialog" aria-controls="split">Split Bill</button>
+  </section>
+  {% endif %}
+
+  <section class="info" aria-labelledby="info-title">
+    <h2 id="info-title">Visit &amp; contact</h2>
+    <dl class="info-grid">
+      {% if store.address %}<div><dt>Address</dt><dd>{{ store.address }}{% if store.maps_url %} · <a href="{{ store.maps_url }}" target="_blank" rel="noopener">Open in Maps</a>{% endif %}</dd></div>{% endif %}
+      {% if store.opening_hours %}<div><dt>Opening hours</dt><dd class="pre">{{ store.opening_hours }}</dd></div>{% endif %}
+      {% if store.phone %}<div><dt>Phone</dt><dd><a href="tel:{{ store.phone }}">{{ store.phone }}</a></dd></div>{% endif %}
+      {% if store.email %}<div><dt>Email</dt><dd><a href="mailto:{{ store.email }}">{{ store.email }}</a></dd></div>{% endif %}
+    </dl>
+  </section>
+
+  <footer class="footer">
+    <p>© {{ year }} {{ store.name }}</p>
+    <p class="powered"><a href="{{ brand_url }}" target="_blank" rel="noopener">Powered by <strong>MePage</strong> · mepage.in</a></p>
+  </footer>
+
+  <button type="button" class="cart-fab" id="cart-open" aria-haspopup="dialog" aria-controls="cart" hidden>
+    <span aria-hidden="true">🛒</span> <span>View enquiry list</span>
+    <span class="cart-count" id="cart-count" aria-label="items in list">0</span>
+  </button>
+
+  <dialog id="cart" class="sheet" aria-labelledby="cart-title">
+    <div class="sheet-head">
+      <h2 id="cart-title">Your enquiry list</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Close">✕</button>
+    </div>
+    <div id="cart-body" class="sheet-body"></div>
+    <div class="sheet-foot">
+      <p id="cart-subtotal" class="subtotal"></p>
+      <p id="cart-warning" class="warning" role="alert" hidden></p>
+      <a id="cart-send" class="btn btn-wa btn-block" target="_blank" rel="noopener">Send enquiry on WhatsApp</a>
+      <p class="hint">WhatsApp opens with your list ready — tap <strong>Send</strong> in WhatsApp to reach {{ store.name }}. Nothing is sent until you do.</p>
+      <button type="button" class="btn-text" id="cart-clear">Clear list</button>
+    </div>
+  </dialog>
+
+  <dialog id="item-dialog" class="sheet" aria-labelledby="item-dialog-title">
+    <div class="sheet-head">
+      <h2 id="item-dialog-title"></h2>
+      <button type="button" class="icon-btn" data-close aria-label="Close">✕</button>
+    </div>
+    <div id="item-dialog-body" class="sheet-body"></div>
+  </dialog>
+
+  {% if split_bill %}
+  <dialog id="split" class="sheet split-sheet" aria-labelledby="split-title">
+    <div class="sheet-head">
+      <h2 id="split-title">Split Bill</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Close">✕</button>
+    </div>
+    <div id="split-body" class="sheet-body"></div>
+  </dialog>
+  {% endif %}
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="application/json" id="store-data">{{ store_json | tojson }}</script>
+  {% if inline_js %}<script>{{ inline_js | safe }}</script>{% else %}<script src="assets/store.js?v={{ asset_v }}" defer></script>{% endif %}
+  {% if split_bill %}{% if inline_split_js %}<script>{{ inline_split_js | safe }}</script>{% else %}<script src="assets/split.js?v={{ asset_v }}" defer></script>{% endif %}{% endif %}
+</body>
+</html>

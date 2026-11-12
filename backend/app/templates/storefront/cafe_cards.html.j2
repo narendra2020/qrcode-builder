@@ -1,0 +1,37 @@
+{# Café Cards — photo-first rounded cards, two columns on phones. #}
+{% extends "_base.html.j2" %}
+{% from "_macros.html.j2" import img, media, labels, price, actions, detail, details_button, brand_header, contact_strip with context %}
+
+{% block hero %}
+<div class="cc-hero">
+  {% if banner %}<div class="cc-banner">{{ img(banner, "", "100vw", "", true) }}</div>{% endif %}
+  <div class="cc-hero-card">
+    {{ brand_header("cc-brand") }}
+    {{ contact_strip() }}
+  </div>
+</div>
+{% endblock %}
+
+{% block catalogue %}
+{% for c in categories %}
+<section class="cc-section" id="cat-{{ loop.index }}" aria-labelledby="cat-{{ loop.index }}-h">
+  <h2 id="cat-{{ loop.index }}-h" class="cc-title">{{ c.name }} <span class="count">{{ c["items"]|length }}</span></h2>
+  <ul class="cc-grid">
+    {% for item in c["items"] %}
+    <li class="cc-card item{% if not item.available %} is-out{% endif %}">
+      {{ media(item, "(max-width: 600px) 50vw, 280px") }}
+      <div class="cc-body">
+        <h3 class="item-name">{{ item.name }}</h3>
+        {{ labels(item) }}
+        {% if item.description %}<p class="item-desc clamp-2">{{ item.description }}</p>{% endif %}
+        <div class="cc-foot">{{ price(item) }}</div>
+        {{ actions(item) }}
+      </div>
+      {{ details_button(item) }}
+    </li>
+    {{ detail(item) }}
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+{% endblock %}
